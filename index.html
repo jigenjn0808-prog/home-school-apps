@@ -11,43 +11,38 @@
         .clock {
             width: 300px;
             height: 300px;
-            border: 10px solid #444;
+            border: 12px solid #444;
             border-radius: 50%;
             position: relative;
             background: #fff;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             margin: 0 auto;
-            /* 時計全体をコンテナとして認識させる */
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
+        /* 針の共通設定 */
         .hand {
             position: absolute;
-            /* 中心点から生やす */
             bottom: 50%;
             left: 50%;
-            /* 回転軸を「下端の中央」に固定 */
             transform-origin: center bottom;
             border-radius: 10px;
             transition: transform 0.5s cubic-bezier(0.4, 2.08, 0.55, 0.44);
+            /* 数字より上に、中心点より下に来るように調整 */
+            z-index: 10;
         }
 
         .hour-hand {
-            width: 8px;
-            height: 75px;
+            width: 10px;
+            height: 70px;
             background: #333;
-            margin-left: -4px; /* 幅の半分マイナス */
-            z-index: 5;
+            margin-left: -5px;
         }
 
         .minute-hand {
             width: 5px;
-            height: 125px;
+            height: 120px;
             background: #ef4444;
-            margin-left: -2.5px; /* 幅の半分マイナス */
-            z-index: 4;
+            margin-left: -2.5px;
         }
 
         .center-dot {
@@ -56,22 +51,27 @@
             background: #222;
             border-radius: 50%;
             position: absolute;
-            z-index: 10;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20; /* 針よりも上に表示 */
             border: 2px solid #fff;
         }
 
+        /* 数字のスタイル */
         .number {
             position: absolute;
             width: 40px;
             height: 40px;
             text-align: center;
             line-height: 40px;
-            font-weight: 800;
-            font-size: 1.4rem;
+            font-weight: 900;
+            font-size: 1.6rem;
             color: #333;
+            z-index: 5;
         }
 
-        /* 目盛りの設定をより厳密に修正 */
+        /* 目盛りのスタイル */
         .tick {
             position: absolute;
             top: 0;
@@ -80,8 +80,7 @@
             height: 8px;
             background: #bbb;
             margin-left: -1px;
-            /* 回転軸を時計の中心（150px下）に設定 */
-            transform-origin: center 150px;
+            transform-origin: center 138px; /* 枠線の太さに合わせて調整 */
         }
         .tick-major {
             width: 4px;
@@ -91,58 +90,38 @@
         }
     </style>
 </head>
-<body class="bg-blue-50 min-h-screen flex flex-col items-center justify-center p-4 text-gray-800">
+<body class="bg-blue-50 min-h-screen flex flex-col items-center justify-center p-4">
 
     <div class="bg-white p-6 rounded-[2.5rem] shadow-2xl flex flex-col items-center w-full max-w-sm">
-        <h2 class="text-xl font-bold text-blue-600 mb-4 font-sans">✍️ とけいのもんだい</h2>
+        <h2 class="text-xl font-bold text-blue-600 mb-6">✍️ とけいのもんだい</h2>
         
         <div class="clock" id="clock-face">
-            <div class="center-dot"></div>
+            <div id="ticks-layer"></div>
+            <div id="numbers-layer"></div>
             <div id="hour-hand" class="hand hour-hand"></div>
             <div id="minute-hand" class="hand minute-hand"></div>
+            <div class="center-dot"></div>
         </div>
 
-        <div class="mt-6 flex flex-col items-center gap-2">
+        <div class="mt-8 flex flex-col items-center gap-3">
             <div class="text-5xl font-black text-gray-800 bg-gray-100 px-8 py-3 rounded-2xl font-mono shadow-inner" id="digital-display">
                 10:00
             </div>
-            <div class="text-sm font-bold text-orange-500 bg-orange-50 px-4 py-1 rounded-full" id="angle-display">
-                はりと針の角度: 0°
+            <div class="text-sm font-bold text-orange-600 bg-orange-50 px-5 py-2 rounded-full border border-orange-100" id="angle-display">
+                長針と短針の角度: 0°
             </div>
         </div>
 
         <div class="mt-6 flex gap-2 w-full">
-            <input type="text" id="time-input" placeholder="3:15" class="flex-1 border-2 border-blue-100 rounded-xl px-4 py-2 text-center font-bold focus:border-blue-500 outline-none">
-            <button onclick="setTimeFromInput()" class="bg-blue-600 text-white px-5 py-2 rounded-xl font-bold active:scale-95 transition-all shadow-md">セット</button>
+            <input type="text" id="time-input" placeholder="例 10:30" class="flex-1 border-2 border-blue-100 rounded-xl px-4 py-3 text-center font-bold focus:border-blue-500 outline-none text-lg">
+            <button onclick="setTimeFromInput()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold active:scale-95 transition-all shadow-md">セット</button>
         </div>
 
-        <div class="mt-6 grid grid-cols-4 gap-2 w-full">
-            <button onclick="addMinutes(-30)" class="bg-gray-100 font-bold py-3 rounded-xl text-xs active:scale-90">-30分</button>
-            <button onclick="addMinutes(-5)" class="bg-gray-100 font-bold py-3 rounded-xl text-xs active:scale-90">-5分</button>
-            <button onclick="addMinutes(5)" class="bg-blue-50 text-blue-600 font-bold py-3 rounded-xl text-xs active:scale-90">+5分</button>
-            <button onclick="addMinutes(30)" class="bg-blue-50 text-blue-600 font-bold py-3 rounded-xl text-xs active:scale-90">+30分</button>
+        <div class="mt-6 grid grid-cols-4 gap-2 w-full text-sm">
+            <button onclick="addMinutes(-30)" class="bg-gray-100 font-bold py-3 rounded-xl active:scale-90">-30分</button>
+            <button onclick="addMinutes(-5)" class="bg-gray-100 font-bold py-3 rounded-xl active:scale-90">-5分</button>
+            <button onclick="addMinutes(5)" class="bg-blue-50 text-blue-600 font-bold py-3 rounded-xl active:scale-90">+5分</button>
+            <button onclick="addMinutes(30)" class="bg-blue-50 text-blue-600 font-bold py-3 rounded-xl active:scale-90">+30分</button>
             
             <button onclick="addMinutes(-1)" class="col-span-2 bg-orange-50 text-orange-600 font-bold py-4 rounded-xl active:scale-95">1分もどす</button>
-            <button onclick="addMinutes(1)" class="col-span-2 bg-orange-500 text-white font-bold py-4 rounded-xl active:scale-95 shadow-md">1分すすめる</button>
-        </div>
-    </div>
-
-    <script>
-        let totalMinutes = 600;
-
-        function updateClock() {
-            if (totalMinutes < 0) totalMinutes += 1440;
-            totalMinutes %= 1440;
-
-            const hours24 = Math.floor(totalMinutes / 60);
-            const hours12 = hours24 % 12;
-            const mins = totalMinutes % 60;
-
-            // 10:05の場合、長針は 5 * 6 = 30度ぴったりを指す
-            const hDeg = (hours12 * 30) + (mins * 0.5);
-            const mDeg = mins * 6;
-            
-            document.getElementById('hour-hand').style.transform = `rotate(${hDeg}deg)`;
-            document.getElementById('minute-hand').style.transform = `rotate(${mDeg}deg)`;
-            
-            const displayH = hours12 === 0 ? 12 : hours12;
+            <button
