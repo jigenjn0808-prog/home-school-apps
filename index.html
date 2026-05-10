@@ -7,21 +7,27 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * { -webkit-tap-highlight-color: transparent; }
+        .clock-wrapper {
+            position: relative;
+            padding: 40px; /* 数字が外にはみ出る分の余白 */
+            display: flex;
+            justify-content: center;
+        }
         .clock {
             width: 300px; height: 300px;
             border: 12px solid #334155; border-radius: 50%;
             position: relative; background: #fff;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15); margin: 0 auto;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
         }
         .hand {
             position: absolute; bottom: 50%; left: 50%;
             transform-origin: center bottom; border-radius: 10px; z-index: 10;
         }
-        .hour-hand { width: 10px; height: 70px; background: #1e293b; margin-left: -5px; transition: transform 0.5s cubic-bezier(0.4, 2, 0.5, 1); }
-        .minute-hand { width: 5px; height: 120px; background: #e11d48; margin-left: -2.5px; transition: transform 0.5s cubic-bezier(0.4, 2, 0.5, 1); }
+        .hour-hand { width: 10px; height: 70px; background: #1e293b; margin-left: -5px; transition: transform 0.3s cubic-bezier(0.4, 2, 0.5, 1); }
+        .minute-hand { width: 5px; height: 120px; background: #e11d48; margin-left: -2.5px; transition: transform 0.3s cubic-bezier(0.4, 2, 0.5, 1); }
+        .second-hand { width: 2px; height: 130px; background: #3b82f6; margin-left: -1px; transition: transform 0.1s linear; z-index: 15; }
         .center-dot { width: 16px; height: 16px; background: #1e293b; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 20; border: 2px solid #fff; }
         
-        /* 数字を確実に出すためのスタイル */
         .number {
             position: absolute; width: 40px; height: 40px;
             text-align: center; line-height: 40px;
@@ -29,89 +35,175 @@
         }
         .tick { position: absolute; top: 0; left: 50%; width: 2px; height: 8px; background: #cbd5e1; margin-left: -1px; transform-origin: center 138px; }
         .tick-major { width: 4px; height: 14px; background: #475569; margin-left: -2px; }
-        
-        /* 数字の配置（CSSで固定） */
-        .n1 { transform: translate(55px, 15px); } .n2 { transform: translate(100px, 60px); }
-        .n3 { transform: translate(115px, 118px); } .n4 { transform: translate(100px, 175px); }
-        .n5 { transform: translate(55px, 220px); } .n6 { transform: translate(-20px, 235px); }
-        .n7 { transform: translate(-95px, 220px); } .n8 { transform: translate(-140px, 175px); }
-        .n9 { transform: translate(-155px, 118px); } .n10 { transform: translate(-140px, 60px); }
-        .n11 { transform: translate(-95px, 15px); } .n12 { transform: translate(-20px, 5px); }
+
+        /* inputスピンボタン（上下の矢印）を少し見やすく */
+        input[type=number]::-webkit-inner-spin-button { opacity: 1; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col items-center p-4 py-8">
 
-    <div class="bg-white p-6 rounded-[2.5rem] shadow-2xl w-full max-w-sm border border-slate-100">
-        <div id="quiz-container" class="mb-6 p-4 bg-blue-600 text-white rounded-2xl hidden shadow-lg animate-bounce-short">
+    <div class="bg-white p-6 rounded-[2.5rem] shadow-2xl w-full max-w-md border border-slate-100">
+        
+        <div id="quiz-container" class="mb-2 p-4 bg-blue-600 text-white rounded-2xl hidden shadow-lg">
             <p class="text-xs font-bold opacity-80">じゅけんもんだい：</p>
             <p id="quiz-text" class="text-lg font-bold leading-tight"></p>
         </div>
 
-        <div class="clock" id="clock-face">
-            <div class="number n1" style="left:50%">1</div><div class="number n2" style="left:50%">2</div>
-            <div class="number n3" style="left:50%">3</div><div class="number n4" style="left:50%">4</div>
-            <div class="number n5" style="left:50%">5</div><div class="number n6" style="left:50%">6</div>
-            <div class="number n7" style="left:50%">7</div><div class="number n8" style="left:50%">8</div>
-            <div class="number n9" style="left:50%">9</div><div class="number n10" style="left:50%">10</div>
-            <div class="number n11" style="left:50%">11</div><div class="number n12" style="left:50%">12</div>
+        <div class="clock-wrapper">
+            <div class="clock" id="clock-face">
+                <div id="hour-hand" class="hand hour-hand"></div>
+                <div id="minute-hand" class="hand minute-hand"></div>
+                <div id="second-hand" class="hand second-hand"></div>
+                <div class="center-dot"></div>
+            </div>
+        </div>
+
+        <div class="flex justify-center items-end gap-2 mt-2 text-lg font-bold text-slate-800">
+            <div class="flex flex-col items-center">
+                <input type="number" id="input-h" class="w-16 text-center border-2 border-slate-200 rounded-lg p-1 bg-slate-50" min="1" max="12" onchange="setTimeFromInput()">
+                <span class="text-xs text-slate-500 mt-1">時</span>
+            </div>
+            <span class="mb-6">:</span>
+            <div class="flex flex-col items-center">
+                <input type="number" id="input-m" class="w-16 text-center border-2 border-slate-200 rounded-lg p-1 bg-slate-50" min="0" max="59" onchange="setTimeFromInput()">
+                <span class="text-xs text-slate-500 mt-1">分</span>
+            </div>
+            <span class="mb-6">:</span>
+            <div class="flex flex-col items-center">
+                <input type="number" id="input-s" class="w-24 text-center border-2 border-slate-200 rounded-lg p-1 bg-slate-50" min="0" max="59.99" step="0.01" onchange="setTimeFromInput()">
+                <span class="text-xs text-slate-500 mt-1">秒 (小数可)</span>
+            </div>
+        </div>
+
+        <div class="mt-4 flex flex-col items-center gap-2">
+            <div class="text-base font-bold text-rose-600 bg-rose-50 px-4 py-2 rounded-full border border-rose-100 shadow-inner" id="angle-display">0°</div>
             
-            <div id="hour-hand" class="hand hour-hand"></div>
-            <div id="minute-hand" class="hand minute-hand"></div>
-            <div class="center-dot"></div>
+            <div class="flex items-center gap-2 mt-2 bg-slate-100 p-2 rounded-xl w-full justify-center">
+                <span class="text-sm font-bold text-slate-600">角度から探す:</span>
+                <input type="number" id="input-angle" class="w-16 text-center border border-slate-300 rounded-md p-1 font-bold" min="0" max="180" placeholder="180">
+                <span class="text-sm font-bold text-slate-600">度</span>
+                <button onclick="calcTimeFromAngle()" class="bg-indigo-500 text-white font-bold py-1.5 px-3 rounded-lg active:scale-95 text-xs shadow-sm">時間に合わせる</button>
+            </div>
         </div>
 
-        <div class="mt-6 flex flex-col items-center gap-2">
-            <div class="text-4xl font-black text-slate-800 font-mono" id="digital-display">10:00</div>
-            <div class="text-sm font-bold text-rose-600 bg-rose-50 px-4 py-1 rounded-full" id="angle-display">0°</div>
+        <div class="mt-6 grid grid-cols-4 gap-2 w-full text-xs font-bold">
+            <button onclick="addSeconds(-60)" class="bg-slate-100 py-3 rounded-xl text-slate-600 shadow-sm">-1分</button>
+            <button onclick="addSeconds(60)" class="bg-blue-100 py-3 rounded-xl text-blue-600 shadow-sm">+1分</button>
+            <button onclick="addSeconds(-1)" class="bg-rose-50 py-3 rounded-xl text-rose-500 shadow-sm">-1秒</button>
+            <button onclick="addSeconds(1)" class="bg-rose-500 py-3 rounded-xl text-white shadow-sm">+1秒</button>
         </div>
 
-        <div class="mt-6 grid grid-cols-2 gap-3 w-full">
-            <button onclick="generateQuiz()" class="col-span-2 bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-md active:scale-95 transition-all">📝 もんだいをだす</button>
-            <button onclick="showHint()" id="hint-btn" class="hidden bg-amber-400 text-white font-bold py-3 rounded-2xl active:scale-95">💡 かいせつ</button>
-            <button onclick="checkAnswer()" id="check-btn" class="hidden bg-green-500 text-white font-bold py-3 rounded-2xl active:scale-95">✅ できた！</button>
+        <div class="mt-4 grid grid-cols-2 gap-3 w-full">
+            <button onclick="generateQuiz()" class="col-span-2 bg-blue-600 text-white font-bold py-3 rounded-2xl shadow-md active:scale-95 transition-all">📝 もんだいをだす</button>
+            <button onclick="showHint()" id="hint-btn" class="hidden bg-amber-400 text-white font-bold py-2 rounded-xl active:scale-95">💡 かいせつ</button>
+            <button onclick="checkAnswer()" id="check-btn" class="hidden bg-green-500 text-white font-bold py-2 rounded-xl active:scale-95">✅ できた！</button>
         </div>
 
         <div id="explanation" class="mt-4 p-4 bg-amber-50 rounded-2xl hidden border border-amber-200 text-sm">
             <p id="explanation-text" class="text-amber-900 leading-relaxed font-medium"></p>
         </div>
-
-        <div class="mt-6 grid grid-cols-4 gap-2 w-full text-[10px] font-bold">
-            <button onclick="addMinutes(-5)" class="bg-slate-100 py-2 rounded-lg text-slate-500">-5分</button>
-            <button onclick="addMinutes(5)" class="bg-blue-100 py-2 rounded-lg text-blue-600">+5分</button>
-            <button onclick="addMinutes(-1)" class="bg-rose-50 py-2 rounded-lg text-rose-500">-1分</button>
-            <button onclick="addMinutes(1)" class="bg-rose-500 py-2 rounded-lg text-white">+1分</button>
-        </div>
     </div>
 
     <script>
-        let totalMinutes = 600;
+        // 内部の時間はすべて「秒」で管理します (10:00:00 = 36000秒)
+        let totalSeconds = 36000; 
         let currentTargetAngle = null;
 
         function updateClock() {
-            if (totalMinutes < 0) totalMinutes += 1440;
-            totalMinutes %= 1440;
-            const h12 = (Math.floor(totalMinutes / 60)) % 12;
-            const mins = totalMinutes % 60;
-            const hDeg = (h12 * 30) + (mins * 0.5);
-            const mDeg = mins * 6;
+            // マイナスになった場合や12時間を超えた場合の処理 (12時間 = 43200秒)
+            if (totalSeconds < 0) totalSeconds += 43200;
+            totalSeconds %= 43200;
+
+            let h12 = Math.floor(totalSeconds / 3600);
+            if (h12 === 0) h12 = 12;
+            const m = Math.floor((totalSeconds % 3600) / 60);
+            const s = totalSeconds % 60;
+
+            // 入力欄に現在の時間を反映 (フォーカスしていない時のみ)
+            if(document.activeElement.id !== 'input-h') document.getElementById('input-h').value = h12;
+            if(document.activeElement.id !== 'input-m') document.getElementById('input-m').value = m;
+            if(document.activeElement.id !== 'input-s') {
+                // 秒は整数ならそのまま、小数があれば第2位まで表示
+                document.getElementById('input-s').value = s % 1 === 0 ? s : s.toFixed(2);
+            }
+
+            // 角度の計算 (秒ベースで正確に計算)
+            const hDeg = totalSeconds / 120; // 12時間(43200秒)で360度 -> 360/43200 = 1/120
+            const mDeg = (totalSeconds % 3600) / 10; // 60分(3600秒)で360度 -> 360/3600 = 1/10
+            const sDeg = s * 6; // 60秒で360度
+
             document.getElementById('hour-hand').style.transform = `rotate(${hDeg}deg)`;
             document.getElementById('minute-hand').style.transform = `rotate(${mDeg}deg)`;
-            const displayH = h12 === 0 ? 12 : h12;
-            document.getElementById('digital-display').innerText = `${displayH}:${mins.toString().padStart(2, '0')}`;
+            document.getElementById('second-hand').style.transform = `rotate(${sDeg}deg)`;
+
+            // 長針と短針の角度差を計算
             let diff = Math.abs(hDeg - mDeg);
             if (diff > 180) diff = 360 - diff;
-            document.getElementById('angle-display').innerText = `長針と短針の角度: ${diff % 1 === 0 ? diff.toFixed(0) : diff.toFixed(1)}°`;
+            
+            // 角度表示の更新
+            document.getElementById('angle-display').innerText = `長針と短針の角度: ${diff % 1 === 0 ? diff : diff.toFixed(2)}°`;
+            
             return diff;
         }
 
-        function addMinutes(m) { totalMinutes += m; updateClock(); }
+        // 入力ボックスの値を時計に反映する
+        function setTimeFromInput() {
+            let h = parseFloat(document.getElementById('input-h').value) || 0;
+            if(h === 12) h = 0; // 12時は計算上0時として扱う
+            const m = parseFloat(document.getElementById('input-m').value) || 0;
+            const s = parseFloat(document.getElementById('input-s').value) || 0;
+            totalSeconds = (h * 3600) + (m * 60) + s;
+            updateClock();
+        }
 
-        // 問題生成
+        // 角度から次にその角度になる時間を計算する (時計算の方程式)
+        function calcTimeFromAngle() {
+            const targetDeg = parseFloat(document.getElementById('input-angle').value);
+            if (isNaN(targetDeg) || targetDeg < 0 || targetDeg > 180) {
+                alert("0から180の間の角度を入力してください");
+                return;
+            }
+
+            const currentH = Math.floor(totalSeconds / 3600); // 今の「時」を基準にする
+            
+            // | 30H - 5.5M | = 角度
+            // パターン1: 30H - 5.5M = 角度  => M = (30H - 角度) / 5.5
+            // パターン2: 5.5M - 30H = 角度  => M = (30H + 角度) / 5.5
+            const m1 = (30 * currentH - targetDeg) / 5.5;
+            const m2 = (30 * currentH + targetDeg) / 5.5;
+            
+            let validMins = [];
+            if (m1 >= 0 && m1 < 60) validMins.push(m1);
+            if (m2 >= 0 && m2 < 60) validMins.push(m2);
+            
+            if (validMins.length === 0) {
+                alert(`${currentH === 0 ? 12 : currentH}時台に${targetDeg}度になることはありません。`);
+                return;
+            }
+
+            // 現在の「分」より未来にあるものを探す
+            const currentM = (totalSeconds % 3600) / 60;
+            // +0.01は誤差による再計算防止
+            validMins.sort((a, b) => a - b);
+            let nextM = validMins.find(m => m > currentM + 0.01); 
+            
+            if (nextM === undefined) {
+                nextM = validMins[0]; // なければ最初の時間に戻る
+            }
+
+            totalSeconds = (currentH * 3600) + (nextM * 60);
+            updateClock();
+        }
+
+        function addSeconds(s) { 
+            totalSeconds += s; 
+            updateClock(); 
+        }
+
         function generateQuiz() {
             const angles = [0, 90, 180, 45, 60];
             currentTargetAngle = angles[Math.floor(Math.random() * angles.length)];
-            const quizText = `長針と短針の角度を「${currentTargetAngle}度」にしてください。`;
-            document.getElementById('quiz-text').innerText = quizText;
+            document.getElementById('quiz-text').innerText = `長針と短針の角度を「${currentTargetAngle}度」にしてください。`;
             document.getElementById('quiz-container').classList.remove('hidden');
             document.getElementById('hint-btn').classList.remove('hidden');
             document.getElementById('check-btn').classList.remove('hidden');
@@ -120,6 +212,7 @@
 
         function checkAnswer() {
             const currentAngle = updateClock();
+            // 小数の誤差を考慮して判定
             if (Math.abs(currentAngle - currentTargetAngle) < 0.1) {
                 alert("✨ 正解です！すごい！ ✨");
             } else {
@@ -134,23 +227,46 @@
             text.innerHTML = `
                 <strong>【時計算のポイント】</strong><br>
                 1分間に長針は 6°、短針は 0.5° 進みます。<br>
-                例えば 90° にしたい時は、3時ちょうどの位置などがわかりやすいよ！<br>
-                今の時間は長針が ${ (totalMinutes % 60) * 6 }° の場所にあります。
+                1秒間だと長針は 0.1°、短針は 約0.008° 進みます。<br>
+                ピッタリの角度になる時は、秒数が分数（小数）になることが多いよ！
             `;
         }
 
-        // 目盛り生成
-        function createTicks() {
+        // 初期描画処理
+        window.onload = () => { 
             const face = document.getElementById('clock-face');
+            
+            // 1. 目盛りの生成
             for (let i = 0; i < 60; i++) {
                 const tick = document.createElement('div');
                 tick.className = i % 5 === 0 ? 'tick tick-major' : 'tick';
                 tick.style.transform = `rotate(${i * 6}deg)`;
                 face.appendChild(tick);
             }
-        }
 
-        window.onload = () => { createTicks(); updateClock(); };
+            // 2. 外側の数字を三角関数を使って配置
+            for (let i = 1; i <= 12; i++) {
+                const num = document.createElement('div');
+                num.className = 'number';
+                num.innerText = i;
+                
+                // 角度を計算 (12時の位置が-90度)
+                const angle = (i * 30 - 90) * (Math.PI / 180);
+                const radius = 185; // 時計の枠外になる半径
+                
+                // x, y 座標を計算
+                const x = radius * Math.cos(angle);
+                const y = radius * Math.sin(angle);
+                
+                num.style.left = '50%';
+                num.style.top = '50%';
+                num.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
+                
+                face.appendChild(num);
+            }
+
+            updateClock(); 
+        };
     </script>
 </body>
 </html>
