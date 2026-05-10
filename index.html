@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>とけいのおべんきょう</title>
+    <title>とけいマスター</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * { -webkit-tap-highlight-color: transparent; }
@@ -17,20 +17,23 @@
             background: #fff;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             margin: 0 auto;
+            /* 時計全体をコンテナとして認識させる */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* 針の共通設定 */
         .hand {
             position: absolute;
-            left: 50%;
+            /* 中心点から生やす */
             bottom: 50%;
-            /* 左右中央(X)を自分の幅の半分戻し、回転軸を下端(Y)に固定 */
-            transform-origin: 50% 100%; 
+            left: 50%;
+            /* 回転軸を「下端の中央」に固定 */
+            transform-origin: center bottom;
             border-radius: 10px;
             transition: transform 0.5s cubic-bezier(0.4, 2.08, 0.55, 0.44);
         }
 
-        /* 短針（黒） */
         .hour-hand {
             width: 8px;
             height: 75px;
@@ -39,10 +42,9 @@
             z-index: 5;
         }
 
-        /* 長針（赤） */
         .minute-hand {
             width: 5px;
-            height: 120px;
+            height: 125px;
             background: #ef4444;
             margin-left: -2.5px; /* 幅の半分マイナス */
             z-index: 4;
@@ -54,9 +56,6 @@
             background: #222;
             border-radius: 50%;
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
             z-index: 10;
             border: 2px solid #fff;
         }
@@ -68,50 +67,68 @@
             text-align: center;
             line-height: 40px;
             font-weight: 800;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             color: #333;
         }
 
+        /* 目盛りの設定をより厳密に修正 */
         .tick {
             position: absolute;
-            width: 2px;
-            height: 10px;
-            background: #ddd;
+            top: 0;
             left: 50%;
+            width: 2px;
+            height: 8px;
+            background: #bbb;
             margin-left: -1px;
-            transform-origin: 50% 140px; /* 時計の半径に合わせる */
+            /* 回転軸を時計の中心（150px下）に設定 */
+            transform-origin: center 150px;
+        }
+        .tick-major {
+            width: 4px;
+            height: 14px;
+            background: #444;
+            margin-left: -2px;
         }
     </style>
 </head>
-<body class="bg-yellow-50 min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-blue-50 min-h-screen flex flex-col items-center justify-center p-4 text-gray-800">
 
-    <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl flex flex-col items-center w-full max-w-sm">
-        <h2 class="text-2xl font-bold text-orange-600 mb-8">⏰ とけいのおべんきょう</h2>
+    <div class="bg-white p-6 rounded-[2.5rem] shadow-2xl flex flex-col items-center w-full max-w-sm">
+        <h2 class="text-xl font-bold text-blue-600 mb-4 font-sans">✍️ とけいのもんだい</h2>
         
         <div class="clock" id="clock-face">
-            <div id="ticks-container"></div>
-            <div id="numbers-container"></div>
+            <div class="center-dot"></div>
             <div id="hour-hand" class="hand hour-hand"></div>
             <div id="minute-hand" class="hand minute-hand"></div>
-            <div class="center-dot"></div>
         </div>
 
-        <div class="mt-10 text-center">
-            <div class="text-5xl font-black text-gray-800 bg-gray-100 px-10 py-4 rounded-3xl inline-block font-mono shadow-inner" id="digital-display">
+        <div class="mt-6 flex flex-col items-center gap-2">
+            <div class="text-5xl font-black text-gray-800 bg-gray-100 px-8 py-3 rounded-2xl font-mono shadow-inner" id="digital-display">
                 10:00
+            </div>
+            <div class="text-sm font-bold text-orange-500 bg-orange-50 px-4 py-1 rounded-full" id="angle-display">
+                はりと針の角度: 0°
             </div>
         </div>
 
-        <div class="mt-10 grid grid-cols-2 gap-4 w-full">
-            <button onclick="addMinutes(-30)" class="bg-orange-100 active:bg-orange-200 text-orange-700 font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-sm">30分もどす</button>
-            <button onclick="addMinutes(30)" class="bg-orange-500 active:bg-orange-600 text-white font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-md">30分すすめる</button>
-            <button onclick="addMinutes(-5)" class="bg-blue-100 active:bg-blue-200 text-blue-700 font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-sm">5分もどす</button>
-            <button onclick="addMinutes(5)" class="bg-blue-500 active:bg-blue-600 text-white font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-md">5分すすめる</button>
+        <div class="mt-6 flex gap-2 w-full">
+            <input type="text" id="time-input" placeholder="3:15" class="flex-1 border-2 border-blue-100 rounded-xl px-4 py-2 text-center font-bold focus:border-blue-500 outline-none">
+            <button onclick="setTimeFromInput()" class="bg-blue-600 text-white px-5 py-2 rounded-xl font-bold active:scale-95 transition-all shadow-md">セット</button>
+        </div>
+
+        <div class="mt-6 grid grid-cols-4 gap-2 w-full">
+            <button onclick="addMinutes(-30)" class="bg-gray-100 font-bold py-3 rounded-xl text-xs active:scale-90">-30分</button>
+            <button onclick="addMinutes(-5)" class="bg-gray-100 font-bold py-3 rounded-xl text-xs active:scale-90">-5分</button>
+            <button onclick="addMinutes(5)" class="bg-blue-50 text-blue-600 font-bold py-3 rounded-xl text-xs active:scale-90">+5分</button>
+            <button onclick="addMinutes(30)" class="bg-blue-50 text-blue-600 font-bold py-3 rounded-xl text-xs active:scale-90">+30分</button>
+            
+            <button onclick="addMinutes(-1)" class="col-span-2 bg-orange-50 text-orange-600 font-bold py-4 rounded-xl active:scale-95">1分もどす</button>
+            <button onclick="addMinutes(1)" class="col-span-2 bg-orange-500 text-white font-bold py-4 rounded-xl active:scale-95 shadow-md">1分すすめる</button>
         </div>
     </div>
 
     <script>
-        let totalMinutes = 600; // 10:00
+        let totalMinutes = 600;
 
         function updateClock() {
             if (totalMinutes < 0) totalMinutes += 1440;
@@ -121,55 +138,11 @@
             const hours12 = hours24 % 12;
             const mins = totalMinutes % 60;
 
-            // 角度の計算
+            // 10:05の場合、長針は 5 * 6 = 30度ぴったりを指す
             const hDeg = (hours12 * 30) + (mins * 0.5);
             const mDeg = mins * 6;
             
             document.getElementById('hour-hand').style.transform = `rotate(${hDeg}deg)`;
             document.getElementById('minute-hand').style.transform = `rotate(${mDeg}deg)`;
             
-            // デジタル表示
             const displayH = hours12 === 0 ? 12 : hours12;
-            const mStr = mins.toString().padStart(2, '0');
-            document.getElementById('digital-display').innerText = `${displayH}:${mStr}`;
-        }
-
-        function addMinutes(m) {
-            totalMinutes += m;
-            updateClock();
-        }
-
-        function createFace() {
-            const numContainer = document.getElementById('numbers-container');
-            const tickContainer = document.getElementById('ticks-container');
-            
-            // 数字の配置（中心から115pxの位置に配置）
-            for (let i = 1; i <= 12; i++) {
-                const num = document.createElement('div');
-                num.className = 'number';
-                num.innerText = i;
-                const angle = (i * 30) * (Math.PI / 180);
-                const x = 150 + 115 * Math.sin(angle) - 20; // 150は時計の半分、20は数字の幅の半分
-                const y = 150 - 115 * Math.cos(angle) - 20;
-                num.style.left = x + 'px';
-                num.style.top = y + 'px';
-                numContainer.appendChild(num);
-            }
-
-            // 目盛りの配置
-            for (let i = 0; i < 60; i++) {
-                if (i % 5 === 0) continue;
-                const tick = document.createElement('div');
-                tick.className = 'tick';
-                tick.style.transform = `rotate(${i * 6}deg)`;
-                tickContainer.appendChild(tick);
-            }
-        }
-
-        window.onload = () => {
-            createFace();
-            updateClock();
-        };
-    </script>
-</body>
-</html>
