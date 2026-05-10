@@ -7,269 +7,249 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * { -webkit-tap-highlight-color: transparent; }
-        .clock-wrapper { position: relative; padding: 40px; display: flex; justify-content: center; }
+        .clock-wrapper { position: relative; padding: 30px; display: flex; justify-content: center; }
         .clock {
-            width: 280px; height: 280px;
-            border: 12px solid #334155; border-radius: 50%;
+            width: 260px; height: 260px;
+            border: 10px solid #334155; border-radius: 50%;
             position: relative; background: #fff;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
         .hand { position: absolute; bottom: 50%; left: 50%; transform-origin: center bottom; border-radius: 10px; z-index: 10; }
-        .hour-hand { width: 10px; height: 70px; background: #1e293b; margin-left: -5px; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .minute-hand { width: 6px; height: 110px; background: #e11d48; margin-left: -3px; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .center-dot { width: 16px; height: 16px; background: #1e293b; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 20; border: 2px solid #fff; }
+        .hour-hand { width: 8px; height: 65px; background: #1e293b; margin-left: -4px; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .minute-hand { width: 4px; height: 105px; background: #e11d48; margin-left: -2px; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .center-dot { width: 14px; height: 14px; background: #1e293b; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 20; border: 2px solid #fff; }
         
-        .number { position: absolute; width: 40px; height: 40px; text-align: center; line-height: 40px; font-weight: 900; font-size: 1.5rem; color: #334155; z-index: 5; }
-        .tick { position: absolute; top: 0; left: 50%; width: 2px; height: 8px; background: #cbd5e1; margin-left: -1px; transform-origin: center 128px; }
-        .tick-major { width: 4px; height: 14px; background: #475569; margin-left: -2px; }
+        .number { position: absolute; width: 30px; height: 30px; text-align: center; line-height: 30px; font-weight: 900; font-size: 1.3rem; color: #334155; z-index: 5; }
+        .tick { position: absolute; top: 0; left: 50%; width: 2px; height: 8px; background: #cbd5e1; margin-left: -1px; transform-origin: center 120px; }
+        .tick-major { width: 4px; height: 12px; background: #475569; margin-left: -2px; }
 
-        /* 分数表示用のスタイル */
-        .fraction { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; vertical-align: middle; line-height: 1; margin: 0 4px; }
-        .fraction-num { font-size: 0.6em; font-weight: bold; border-bottom: 2px solid currentColor; padding: 0 2px; }
-        .fraction-den { font-size: 0.6em; font-weight: bold; padding: 0 2px; }
+        .fraction { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; vertical-align: middle; line-height: 1.1; margin: 0 2px; }
+        .fraction-num { font-size: 0.75em; font-weight: bold; border-bottom: 2px solid currentColor; padding: 0 2px; }
+        .fraction-den { font-size: 0.75em; font-weight: bold; padding: 0 2px; }
+        
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { opacity: 1; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex flex-col items-center p-4 py-8">
+<body class="bg-slate-50 min-h-screen flex justify-center p-4 py-8">
 
-    <div class="bg-white p-6 rounded-[2.5rem] shadow-2xl w-full max-w-md border border-slate-100">
+    <div class="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-2xl w-full max-w-5xl border border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-8">
         
-        <div class="mb-4 space-y-2">
-            <select id="quiz-category" class="w-full bg-slate-100 border border-slate-300 text-slate-700 font-bold py-2 px-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-400">
-                <option value="basic">① ぴったり重なる・一直線・直角</option>
-                <option value="random_angle">② いろいろな角度</option>
-                <option value="symmetry">③ 左右対称になる時間（難問！）</option>
-            </select>
+        <div class="flex flex-col gap-4">
+            <h1 class="text-2xl font-black text-slate-800 mb-2 border-b-4 border-blue-500 pb-2 inline-block">時計算マスター ⏱️</h1>
             
-            <div id="quiz-container" class="p-4 bg-blue-600 text-white rounded-2xl shadow-md">
-                <div class="flex justify-between items-center mb-1">
-                    <p class="text-xs font-bold opacity-80">じゅけんもんだい：</p>
-                    <button onclick="generateQuiz()" class="text-xs bg-white text-blue-600 px-3 py-1 rounded-full font-bold shadow active:scale-95">次の問題</button>
+            <div class="bg-slate-100 p-4 rounded-2xl">
+                <p class="text-sm font-bold text-slate-600 mb-2">問題カテゴリー</p>
+                <select id="quiz-category" class="w-full bg-white border border-slate-300 text-slate-700 font-bold py-2 px-4 rounded-xl outline-none mb-3 shadow-sm">
+                    <option value="basic">① ぴったり重なる・一直線・直角</option>
+                    <option value="random_angle">② いろいろな角度</option>
+                    <option value="symmetry">③ 左右対称になる時間</option>
+                </select>
+                <button onclick="generateQuiz()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-md active:scale-95 transition-all">📝 新しい問題をだす</button>
+            </div>
+
+            <div id="quiz-container" class="p-5 bg-blue-50 border-2 border-blue-200 rounded-2xl">
+                <p id="quiz-text" class="text-lg font-bold text-slate-800 leading-tight">上のボタンから問題を選んでね！</p>
+            </div>
+
+            <button onclick="showExplanation()" id="hint-btn" class="hidden bg-amber-400 hover:bg-amber-500 text-white font-bold py-3 px-4 rounded-xl shadow-md flex justify-center items-center gap-2">
+                💡 かいせつ・答えを見る
+            </button>
+
+            <div id="explanation-area" class="hidden p-5 bg-amber-50 border-2 border-amber-200 rounded-2xl text-slate-700 text-sm leading-relaxed overflow-y-auto max-h-[400px]">
                 </div>
-                <p id="quiz-text" class="text-lg font-bold leading-tight">上のボタンから問題を選んでね！</p>
-            </div>
         </div>
 
-        <div class="clock-wrapper">
-            <div class="clock" id="clock-face">
-                <div id="hour-hand" class="hand hour-hand"></div>
-                <div id="minute-hand" class="hand minute-hand"></div>
-                <div class="center-dot"></div>
-            </div>
-        </div>
-
-        <div class="mt-2 mb-4 bg-slate-100 rounded-2xl py-4 px-2 text-center border-2 border-slate-200">
-            <div id="digital-display" class="text-3xl font-black text-slate-800 flex items-center justify-center">
+        <div class="flex flex-col items-center bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-inner">
+            
+            <div class="clock-wrapper w-full">
+                <div class="clock" id="clock-face">
+                    <div id="hour-hand" class="hand hour-hand"></div>
+                    <div id="minute-hand" class="hand minute-hand"></div>
+                    <div class="center-dot"></div>
                 </div>
-            <div class="text-sm font-bold text-rose-600 mt-2" id="angle-display">長針と短針の角度: 0°</div>
-        </div>
-
-        <div class="mt-4 bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
-            <p class="text-xs font-bold text-indigo-800 mb-2">▼ 今の「時」で、指定した角度になる時間を探す</p>
-            <div class="flex items-center gap-2 justify-center">
-                <input type="number" id="input-angle" class="w-20 text-center border-2 border-indigo-200 rounded-xl p-2 font-bold text-lg outline-none focus:border-indigo-500" min="0" max="180" placeholder="角度">
-                <span class="text-sm font-bold text-indigo-800">度</span>
-                <button onclick="searchTimes()" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl active:scale-95 shadow">探す</button>
             </div>
-            <div id="candidates-area" class="mt-3 flex flex-col gap-2 empty:hidden"></div>
-        </div>
 
-        <div class="mt-4 grid grid-cols-2 gap-2 w-full text-sm font-bold">
-            <button onclick="addMinutes(-1)" class="bg-slate-100 py-3 rounded-xl text-slate-600 shadow-sm active:scale-95">-1分 戻す</button>
-            <button onclick="addMinutes(1)" class="bg-blue-100 py-3 rounded-xl text-blue-600 shadow-sm active:scale-95">+1分 進める</button>
+            <div class="w-full mt-2 bg-white rounded-2xl py-4 px-2 text-center border-2 border-slate-200 shadow-sm">
+                <div id="digital-display" class="text-3xl font-black text-slate-800 flex items-center justify-center min-h-[48px]"></div>
+                <div class="text-sm font-bold text-rose-600 mt-2" id="angle-display">0°</div>
+            </div>
+
+            <div class="w-full mt-4 bg-white p-4 rounded-2xl border-2 border-blue-200 shadow-sm">
+                <p class="text-xs font-black text-blue-700 mb-3 flex items-center gap-1">
+                    <span class="bg-blue-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">!</span>
+                    時間を分数で指定する（帯分数入力）
+                </p>
+                <div class="flex items-center justify-between gap-1">
+                    <div class="flex flex-col items-center">
+                        <input type="number" id="manual-h" class="w-12 border-2 border-slate-200 rounded-lg p-1 text-center font-bold" value="10" min="1" max="12">
+                        <span class="text-[10px] text-slate-400 font-bold">時</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <input type="number" id="manual-m" class="w-12 border-2 border-slate-200 rounded-lg p-1 text-center font-bold" value="0" min="0" max="59">
+                        <span class="text-[10px] text-slate-400 font-bold">分</span>
+                    </div>
+                    <span class="font-bold text-slate-400">と</span>
+                    <div class="flex items-center gap-1 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        <div class="flex flex-col items-center">
+                            <input type="number" id="manual-num" class="w-12 border-b-2 border-blue-400 p-1 text-center font-bold bg-transparent outline-none" value="0">
+                            <select id="manual-den" class="text-xs font-bold bg-transparent text-blue-600 mt-1 cursor-pointer">
+                                <option value="11">/ 11</option>
+                                <option value="13">/ 13</option>
+                                <option value="60">/ 60</option>
+                            </select>
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-bold">分</span>
+                    </div>
+                    <button onclick="setTimeFromManual()" class="bg-blue-600 text-white font-bold px-3 py-4 rounded-xl text-xs active:scale-95 shadow-md">針を<br>合わす</button>
+                </div>
+            </div>
+
+            <div class="mt-4 w-full space-y-2">
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="addMinutes(-1)" class="bg-slate-200 py-2 rounded-lg text-slate-700 text-xs font-bold shadow-sm">◀ 1分戻す</button>
+                    <button onclick="addMinutes(1)" class="bg-blue-100 py-2 rounded-lg text-blue-700 text-xs font-bold shadow-sm">1分進む ▶</button>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="addFractionalMinutes(-1)" class="bg-rose-50 border border-rose-200 py-2 rounded-lg text-rose-600 text-[10px] font-bold">◀ 1/11分戻す</button>
+                    <button onclick="addFractionalMinutes(1)" class="bg-rose-50 border border-rose-200 py-2 rounded-lg text-rose-600 text-[10px] font-bold">1/11分進む ▶</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        let totalMinutes = 600; // 内部は「分」の浮動小数点で管理（10:00 = 600.0）
-        let currentTargetH = null;
+        let totalMinutes = 600; 
+        let currentQuizData = null;
 
-        // 小数を分数に変換する関数（時計算特化）
         function floatToFraction(decimal) {
-            if (decimal === 0) return { num: 0, den: 1 };
-            
-            const eps = 0.0001; // 誤差許容範囲
-            // 時計算でよく出る分母 (11, 13, そして普通の分数)
-            const denominators = [11, 13, 2, 3, 4, 5, 6, 10]; 
-            
-            for (let den of denominators) {
+            if (decimal < 0.0001) return { num: 0, den: 1 };
+            const eps = 0.0001;
+            const dens = [11, 13, 2, 3, 4, 5, 6, 10, 60]; 
+            for (let den of dens) {
                 let num = Math.round(decimal * den);
-                if (Math.abs(decimal - (num / den)) < eps) {
-                    return { num, den };
-                }
+                if (Math.abs(decimal - (num / den)) < eps) return { num, den };
             }
-            // どの分母にも当てはまらない手動操作などの場合は秒(60分母)として扱う
             return { num: Math.round(decimal * 60), den: 60 };
         }
 
-        // 時間を表示用にフォーマットしてHTMLを返す
         function formatTimeHTML(h, m_float) {
             let m_int = Math.floor(m_float);
             let m_decimal = m_float - m_int;
-            
-            let html = `<span>${h}</span><span class="text-xl mx-1 mt-2">時</span>`;
-            
+            let h_disp = h === 0 ? 12 : h;
+            let html = `<span>${h_disp}</span><span class="text-xl mx-1 mt-2">時</span>`;
             let { num, den } = floatToFraction(m_decimal);
-            
             if (num === 0) {
                 html += `<span>${m_int}</span><span class="text-xl mx-1 mt-2">分</span>`;
             } else {
-                // 帯分数の表示
-                if (m_int > 0) {
-                    html += `<span>${m_int}</span><span class="text-lg mx-1 mt-2">と</span>`;
-                }
-                html += `
-                    <div class="fraction">
-                        <span class="fraction-num">${num}</span>
-                        <span class="fraction-den">${den}</span>
-                    </div>
-                    <span class="text-xl mx-1 mt-2">分</span>
-                `;
+                if (m_int > 0) html += `<span>${m_int}</span><span class="text-lg mx-1 mt-2">と</span>`;
+                html += `<div class="fraction"><span class="fraction-num">${num}</span><span class="fraction-den">${den}</span></div><span class="text-xl mx-1 mt-2">分</span>`;
             }
             return html;
         }
 
         function updateClock() {
             if (totalMinutes < 0) totalMinutes += 720;
-            totalMinutes %= 720; // 12時間 = 720分
-
+            totalMinutes %= 720; 
             let h = Math.floor(totalMinutes / 60);
-            let displayH = h === 0 ? 12 : h;
             let m = totalMinutes % 60;
-
-            // デジタル表示の更新
-            document.getElementById('digital-display').innerHTML = formatTimeHTML(displayH, m);
-
-            // 角度計算
+            document.getElementById('digital-display').innerHTML = formatTimeHTML(h, m);
             const hDeg = (totalMinutes / 720) * 360;
             const mDeg = (m / 60) * 360;
-
             document.getElementById('hour-hand').style.transform = `rotate(${hDeg}deg)`;
             document.getElementById('minute-hand').style.transform = `rotate(${mDeg}deg)`;
-
             let diff = Math.abs(hDeg - mDeg);
             if (diff > 180) diff = 360 - diff;
-            
-            // 角度表示（小数の誤差を丸めて綺麗に出す）
-            document.getElementById('angle-display').innerText = `長針と短針の角度: ${Math.round(diff * 100) / 100}°`;
+            document.getElementById('angle-display').innerText = `長針と短針の角度: ${Math.round(diff * 1000) / 1000}°`;
         }
 
-        function addMinutes(m) { 
-            totalMinutes += m; 
-            updateClock(); 
-        }
-
-        function setExactTime(h, m) {
+        // 手動入力から時間をセット
+        function setTimeFromManual() {
+            let h = parseInt(document.getElementById('manual-h').value);
             if (h === 12) h = 0;
-            totalMinutes = (h * 60) + m;
+            const m = parseInt(document.getElementById('manual-m').value);
+            const num = parseInt(document.getElementById('manual-num').value);
+            const den = parseInt(document.getElementById('manual-den').value);
+            
+            totalMinutes = (h * 60) + m + (num / den);
             updateClock();
-            document.getElementById('candidates-area').innerHTML = ''; // ジャンプしたら候補を消す
         }
 
-        // 角度から時間を探すロジック
-        function searchTimes() {
-            const targetAngle = parseFloat(document.getElementById('input-angle').value);
-            if (isNaN(targetAngle) || targetAngle < 0 || targetAngle > 180) {
-                alert("0〜180の数字を入れてね！");
-                return;
-            }
-
-            let currentH = Math.floor(totalMinutes / 60);
-            let displayH = currentH === 0 ? 12 : currentH;
-
-            // 公式: |30H - 5.5M| = Angle  =>  M = (30H ± Angle) / 5.5  =>  M = (60H ± 2*Angle) / 11
-            const m1 = (60 * currentH - 2 * targetAngle) / 11;
-            const m2 = (60 * currentH + 2 * targetAngle) / 11;
-
-            let candidates = [];
-            if (m1 >= 0 && m1 < 60) candidates.push(m1);
-            if (m2 >= 0 && m2 < 60) candidates.push(m2);
-
-            // 重複排除と並び替え
-            candidates = [...new Set(candidates)].sort((a, b) => a - b);
-
-            const area = document.getElementById('candidates-area');
-            if (candidates.length === 0) {
-                area.innerHTML = `<div class="text-sm text-rose-600 font-bold text-center bg-rose-50 p-2 rounded">${displayH}時台に${targetAngle}度になることはありません。</div>`;
-                return;
-            }
-
-            let buttonsHtml = '';
-            candidates.forEach((m_val, index) => {
-                let timeStr = formatTimeHTML(displayH, m_val);
-                // HTMLをプレーンテキストっぽく表示用に整形
-                let cleanText = `${displayH}時 ${Math.floor(m_val)}`;
-                let frac = floatToFraction(m_val - Math.floor(m_val));
-                if(frac.num > 0) cleanText += `と ${frac.num}/${frac.den}`;
-                cleanText += " 分";
-
-                buttonsHtml += `
-                    <button onclick="setExactTime(${currentH}, ${m_val})" 
-                            class="bg-white border-2 border-indigo-200 text-indigo-700 font-bold py-2 px-4 rounded-xl hover:bg-indigo-50 active:bg-indigo-200 transition-colors flex justify-between items-center">
-                        <span>${index + 1}回目：</span>
-                        <span>${cleanText}</span>
-                        <span class="text-xl">👉</span>
-                    </button>
-                `;
-            });
-            area.innerHTML = buttonsHtml;
+        function addMinutes(m) { totalMinutes += m; updateClock(); }
+        
+        // 1/11分ずつ動かす（中学受験の基本単位）
+        function addFractionalMinutes(step) {
+            const den = parseInt(document.getElementById('manual-den').value) || 11;
+            totalMinutes += (step / den);
+            updateClock();
         }
 
-        // 問題生成
         function generateQuiz() {
             const category = document.getElementById('quiz-category').value;
-            let targetH = Math.floor(Math.random() * 12) || 12; // 1〜12時
+            let targetH = Math.floor(Math.random() * 11) + 1;
+            let targetAngle = 0;
             let text = "";
-
             if (category === 'basic') {
-                const types = [
-                    { name: 'ぴったり重なる（0度）', angle: 0 },
-                    { name: '一直線になる（180度）', angle: 180 },
-                    { name: '直角になる（90度）', angle: 90 }
-                ];
-                let type = types[Math.floor(Math.random() * types.length)];
-                text = `${targetH}時台で、長針と短針が「${type.name}」のは何時何分？<br><span class="text-sm font-normal">※下の『探す』機能を使ってみよう！</span>`;
-            
+                const types = [{n:'重なる(0°)', a:0}, {n:'一直線(180°)', a:180}, {n:'直角(90°)', a:90}];
+                let t = types[Math.floor(Math.random() * types.length)];
+                targetAngle = t.a;
+                text = `${targetH}時台で針が「${t.n}」のは？`;
             } else if (category === 'random_angle') {
-                const angles = [30, 45, 60, 120, 150];
-                let angle = angles[Math.floor(Math.random() * angles.length)];
-                text = `${targetH}時台で、長針と短針が「${angle}度」になるのは何時何分？`;
-            
-            } else if (category === 'symmetry') {
-                text = `${targetH}時台で、長針と短針が「文字盤の12と6を結ぶ線に対して左右対称」になるのは何時何分？<br><span class="text-sm font-normal text-amber-300">💡ヒント：答えの分母は13になるよ！</span>`;
+                targetAngle = [30,45,60,120][Math.floor(Math.random()*4)];
+                text = `${targetH}時台で角度が「${targetAngle}度」になるのは？`;
+            } else {
+                text = `${targetH}時台で「12と6の線に対して左右対称」になるのは？`;
+                document.getElementById('manual-den').value = "13"; // 左右対称は分母13がデフォ
             }
-
-            document.getElementById('quiz-text').innerHTML = text;
-            // 該当の「時」の0分に時計をリセットしておく（考えやすくするため）
-            setExactTime(targetH, 0);
+            document.getElementById('quiz-text').innerText = text;
+            currentQuizData = { cat: category, h: targetH, angle: targetAngle };
+            document.getElementById('explanation-area').classList.add('hidden');
+            document.getElementById('hint-btn').classList.remove('hidden');
+            totalMinutes = targetH * 60;
+            updateClock();
         }
 
-        // 初期描画処理
-        window.onload = () => { 
+        function showExplanation() {
+            const data = currentQuizData;
+            const startDeg = data.h * 30;
+            let html = `<p class='font-bold mb-2 border-b'>📝 解き方の手順</p>`;
+            if(data.cat === 'symmetry') {
+                html += `<p>① ${data.h}時ちょうどのとき、短針は12時から${startDeg}°の位置。</p>
+                         <p>② 左右対称になる＝2つの針の「和」が360°になればよい。</p>
+                         <p>③ 1分間に2つの針は合計で 6 + 0.5 = 6.5(13/2)° 動く。</p>
+                         <p>④ あと (360 - ${startDeg})° 増えればいいので、<br>式：${360-startDeg} ÷ 13/2 = <b>${(360-startDeg)*2}/13 分</b></p>`;
+            } else {
+                html += `<p>① ${data.h}時ちょうどの角度：${startDeg}°</p>
+                         <p>② 1分間に長針は短針より 6 - 0.5 = 5.5(11/2)° 多く動く。</p>`;
+                let m1 = (startDeg - data.angle) * 2;
+                if(m1 >= 0) html += `<p>③ <b>追い越す前</b>：あと ${startDeg - data.angle}° 縮める。<br>式：${startDeg - data.angle} ÷ 11/2 = <b>${m1}/11 分</b></p>`;
+                let m2 = (startDeg + data.angle) * 2;
+                if(data.angle !== 0) html += `<p>④ <b>追い越した後</b>：あと ${startDeg + data.angle}° 動く。<br>式：${startDeg + data.angle} ÷ 11/2 = <b>${m2}/11 分</b></p>`;
+            }
+            const exp = document.getElementById('explanation-area');
+            exp.innerHTML = html;
+            exp.classList.remove('hidden');
+            document.getElementById('hint-btn').classList.add('hidden');
+        }
+
+        window.onload = () => {
             const face = document.getElementById('clock-face');
-            
             for (let i = 0; i < 60; i++) {
-                const tick = document.createElement('div');
-                tick.className = i % 5 === 0 ? 'tick tick-major' : 'tick';
-                tick.style.transform = `rotate(${i * 6}deg)`;
-                face.appendChild(tick);
+                const t = document.createElement('div');
+                t.className = i % 5 === 0 ? 'tick tick-major' : 'tick';
+                t.style.transform = `rotate(${i * 6}deg)`;
+                face.appendChild(t);
             }
-
             for (let i = 1; i <= 12; i++) {
-                const num = document.createElement('div');
-                num.className = 'number';
-                num.innerText = i;
-                const angle = (i * 30 - 90) * (Math.PI / 180);
-                const radius = 165; 
-                const x = radius * Math.cos(angle);
-                const y = radius * Math.sin(angle);
-                num.style.left = '50%';
-                num.style.top = '50%';
-                num.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
-                face.appendChild(num);
+                const n = document.createElement('div');
+                n.className = 'number'; n.innerText = i;
+                const a = (i * 30 - 90) * (Math.PI / 180);
+                const r = 150;
+                n.style.left = '50%'; n.style.top = '50%';
+                n.style.transform = `translate(-50%, -50%) translate(${r * Math.cos(a)}px, ${r * Math.sin(a)}px)`;
+                face.appendChild(n);
             }
-
             updateClock();
-            generateQuiz(); // 最初から1問出しておく
         };
     </script>
 </body>
