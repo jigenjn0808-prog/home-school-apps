@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>とけいのおべんきょう</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* タップ時の青い枠を消す（スマホ用） */
+        * { -webkit-tap-highlight-color: transparent; }
+        
+        .clock {
+            width: min(75vw, 300px); /* 画面幅に合わせてサイズを調整 */
+            height: min(75vw, 300px);
+            border: 8px solid #444;
+            border-radius: 50%;
+            position: relative;
+            background: #fff;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            margin: 0 auto;
+        }
+        .center-dot {
+            width: 12px;
+            height: 12px;
+            background: #222;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            border-radius: 10px;
+            transition: transform 0.5s cubic-bezier(0.4, 2.08, 0.55, 0.44);
+        }
+        .hour-hand {
+            width: 6px;
+            height: 25%; /* 割合で指定してレスポンシブに */
+            background: #333;
+            margin-left: -3px;
+            z-index: 5;
+        }
+        .minute-hand {
+            width: 4px;
+            height: 40%;
+            background: #ef4444;
+            margin-left: -2px;
+            z-index: 4;
+        }
+        .number {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #333;
+        }
+        /* 時計の数字の配置をスマホサイズに合わせて微調整 */
+    </style>
+</head>
+<body class="bg-yellow-50 min-h-screen flex flex-col items-center justify-start sm:justify-center p-4">
+
+    <div class="bg-white p-6 rounded-[2rem] shadow-xl flex flex-col items-center w-full max-w-sm mt-4 sm:mt-0">
+        <h2 class="text-xl font-bold text-orange-600 mb-6">⏰ とけいのおべんきょう</h2>
+        
+        <div class="clock" id="clock-face">
+            <div class="center-dot"></div>
+            <div id="hour-hand" class="hand hour-hand"></div>
+            <div id="minute-hand" class="hand minute-hand"></div>
+        </div>
+
+        <div class="mt-6 text-center">
+            <div class="text-4xl font-black text-gray-800 bg-gray-100 px-8 py-3 rounded-2xl inline-block font-mono" id="digital-display">
+                10:00
+            </div>
+        </div>
+
+        <div class="mt-8 grid grid-cols-2 gap-3 w-full">
+            <button onclick="addMinutes(-30)" class="bg-orange-100 active:bg-orange-200 text-orange-700 font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-sm">30分もどす</button>
+            <button onclick="addMinutes(30)" class="bg-orange-500 active:bg-orange-600 text-white font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-md">30分すすめる</button>
+            <button onclick="addMinutes(-5)" class="bg-blue-100 active:bg-blue-200 text-blue-700 font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-sm">5分もどす</button>
+            <button onclick="addMinutes(5)" class="bg-blue-500 active:bg-blue-600 text-white font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-md">5分すすめる</button>
+        </div>
+
+        <p class="mt-6 text-xs text-gray-400 font-medium text-center">
+            ボタンをタップしてね！
+        </p>
+    </div>
+
+    <script>
+        let totalMinutes = 600;
+
+        function updateClock() {
+            const hours = Math.floor(totalMinutes / 60) % 12;
+            const mins = totalMinutes % 60;
+            const displayHours = Math.floor(totalMinutes / 60) % 24;
+
+            const hDeg = (hours * 30) + (mins * 0.5);
+            const mDeg = mins * 6;
+            
+            document.getElementById('hour-hand').style.transform = `rotate(${hDeg}deg)`;
+            document.getElementById('minute-hand').style.transform = `rotate(${mDeg}deg)`;
+            
+            const hStr = displayHours === 0 ? "12" : (displayHours > 12 ? displayHours - 12 : displayHours);
+            const mStr = mins.toString().padStart(2, '0');
+            document.getElementById('digital-display').innerText = `${hStr}:${mStr}`;
+        }
+
+        function addMinutes(m) {
+            totalMinutes += m;
+            if (totalMinutes < 0) totalMinutes += 1440;
+            updateClock();
+        }
+
+        function createFace() {
+            const face = document.getElementById('clock-face');
+            const radius = face.offsetWidth / 2 - 25; // 縁からの距離を調整
+            const centerX = face.offsetWidth / 2;
+            const centerY = face.offsetHeight / 2;
+
+            for (let i = 1; i <= 12; i++) {
+                const num = document.createElement('div');
+                num.className = 'number';
+                num.innerText = i;
+                const angle = (i * 30) * (Math.PI / 180);
+                const x = centerX + radius * Math.sin(angle) - 15;
+                const y = centerY - radius * Math.cos(angle) - 15;
+                num.style.left = x + 'px';
+                num.style.top = y + 'px';
+                face.appendChild(num);
+            }
+        }
+
+        window.onload = () => {
+            createFace();
+            updateClock();
+        };
+
+        // 画面サイズが変わった時に数字の位置を再計算（スマホの回転対策）
+        window.onresize = () => {
+            const face = document.getElementById('clock-face');
+            face.innerHTML = '<div class="center-dot"></div><div id="hour-hand" class="hand hour-hand"></div><div id="minute-hand" class="hand minute-hand"></div>';
+            createFace();
+            updateClock();
+        };
+    </script>
+</body>
+</html>
