@@ -17,6 +17,8 @@
             background: #fff;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             margin: 0 auto;
+            /* z-indexの基準を作る */
+            display: block; 
         }
 
         /* 針の共通設定 */
@@ -26,8 +28,7 @@
             left: 50%;
             transform-origin: center bottom;
             border-radius: 10px;
-            transition: transform 0.5s cubic-bezier(0.4, 2.08, 0.55, 0.44);
-            /* 数字より上に、中心点より下に来るように調整 */
+            /* 針を数字(z-index: 5)より上に配置 */
             z-index: 10;
         }
 
@@ -36,13 +37,15 @@
             height: 70px;
             background: #333;
             margin-left: -5px;
+            transition: transform 0.5s cubic-bezier(0.4, 2.08, 0.55, 0.44);
         }
 
         .minute-hand {
-            width: 5px;
+            width: 6px;
             height: 120px;
             background: #ef4444;
-            margin-left: -2.5px;
+            margin-left: -3px;
+            transition: transform 0.5s cubic-bezier(0.4, 2.08, 0.55, 0.44);
         }
 
         .center-dot {
@@ -54,11 +57,11 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 20; /* 針よりも上に表示 */
+            z-index: 20;
             border: 2px solid #fff;
         }
 
-        /* 数字のスタイル */
+        /* 数字のスタイル：針より下に配置 */
         .number {
             position: absolute;
             width: 40px;
@@ -80,7 +83,8 @@
             height: 8px;
             background: #bbb;
             margin-left: -1px;
-            transform-origin: center 138px; /* 枠線の太さに合わせて調整 */
+            transform-origin: center 138px;
+            z-index: 1;
         }
         .tick-major {
             width: 4px;
@@ -96,8 +100,6 @@
         <h2 class="text-xl font-bold text-blue-600 mb-6">✍️ とけいのもんだい</h2>
         
         <div class="clock" id="clock-face">
-            <div id="ticks-layer"></div>
-            <div id="numbers-layer"></div>
             <div id="hour-hand" class="hand hour-hand"></div>
             <div id="minute-hand" class="hand minute-hand"></div>
             <div class="center-dot"></div>
@@ -117,11 +119,67 @@
             <button onclick="setTimeFromInput()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold active:scale-95 transition-all shadow-md">セット</button>
         </div>
 
-        <div class="mt-6 grid grid-cols-4 gap-2 w-full text-sm">
-            <button onclick="addMinutes(-30)" class="bg-gray-100 font-bold py-3 rounded-xl active:scale-90">-30分</button>
-            <button onclick="addMinutes(-5)" class="bg-gray-100 font-bold py-3 rounded-xl active:scale-90">-5分</button>
-            <button onclick="addMinutes(5)" class="bg-blue-50 text-blue-600 font-bold py-3 rounded-xl active:scale-90">+5分</button>
-            <button onclick="addMinutes(30)" class="bg-blue-50 text-blue-600 font-bold py-3 rounded-xl active:scale-90">+30分</button>
+        <div class="mt-6 grid grid-cols-4 gap-2 w-full text-sm font-bold">
+            <button onclick="addMinutes(-30)" class="bg-gray-100 py-3 rounded-xl active:bg-gray-200">-30分</button>
+            <button onclick="addMinutes(-5)" class="bg-gray-100 py-3 rounded-xl active:bg-gray-200">-5分</button>
+            <button onclick="addMinutes(5)" class="bg-blue-100 text-blue-700 py-3 rounded-xl active:bg-blue-200">+5分</button>
+            <button onclick="addMinutes(30)" class="bg-blue-100 text-blue-700 py-3 rounded-xl active:bg-blue-200">+30分</button>
             
-            <button onclick="addMinutes(-1)" class="col-span-2 bg-orange-50 text-orange-600 font-bold py-4 rounded-xl active:scale-95">1分もどす</button>
-            <button
+            <button onclick="addMinutes(-1)" class="col-span-2 bg-orange-50 text-orange-600 py-4 rounded-xl active:bg-orange-100">1分もどす</button>
+            <button onclick="addMinutes(1)" class="col-span-2 bg-orange-500 text-white py-4 rounded-xl shadow-md active:bg-orange-600">1分すすめる</button>
+        </div>
+    </div>
+
+    <script>
+        let totalMinutes = 600; // 10:00
+
+        // 針を動かす関数
+        function updateClock() {
+            // 時間の範囲を0〜1439分に収める
+            if (totalMinutes < 0) totalMinutes += 1440;
+            totalMinutes %= 1440;
+
+            const hours24 = Math.floor(totalMinutes / 60);
+            const hours12 = hours24 % 12;
+            const mins = totalMinutes % 60;
+
+            // 角度の計算
+            const hDeg = (hours12 * 30) + (mins * 0.5);
+            const mDeg = mins * 6;
+            
+            // 針を回転
+            const hHand = document.getElementById('hour-hand');
+            const mHand = document.getElementById('minute-hand');
+            if (hHand && mHand) {
+                hHand.style.transform = `rotate(${hDeg}deg)`;
+                mHand.style.transform = `rotate(${mDeg}deg)`;
+            }
+            
+            // デジタル表示の更新
+            const displayH = hours12 === 0 ? 12 : hours12;
+            const mStr = mins.toString().padStart(2, '0');
+            const digital = document.getElementById('digital-display');
+            if (digital) digital.innerText = `${displayH}:${mStr}`;
+
+            // 角度の更新
+            let diff = Math.abs(hDeg - mDeg);
+            if (diff > 180) diff = 360 - diff;
+            const angleText = document.getElementById('angle-display');
+            if (angleText) angleText.innerText = `長針と短針の角度: ${diff.toFixed(1)}°`;
+        }
+
+        // ボタン用関数
+        function addMinutes(m) {
+            totalMinutes += m;
+            updateClock();
+        }
+
+        // 入力フォーム用関数
+        function setTimeFromInput() {
+            const input = document.getElementById('time-input');
+            const val = input.value;
+            // 10:30 や 10 30 や 1030 などの形式に対応
+            const match = val.match(/^(\d{1,2})[:：\s]?(\d{2})$/) || val.match(/^(\d{1,2})$/);
+            
+            if (match) {
+                let h = parseInt(match[1]);
